@@ -8,6 +8,7 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v7.app.NotificationCompat.MediaStyle;
 import android.view.KeyEvent;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
@@ -36,11 +37,12 @@ public class MusicControlNotification {
 
         // Optional custom icon with fallback to the play icon
         smallIcon = r.getIdentifier("music_control_icon", "drawable", packageName);
-        if(smallIcon == 0) smallIcon = r.getIdentifier("play", "drawable", packageName);
+        if (smallIcon == 0)
+            smallIcon = r.getIdentifier("play", "drawable", packageName);
     }
 
     public synchronized void setCustomNotificationIcon(String resourceName) {
-        if(resourceName == null) {
+        if (resourceName == null) {
             customIcon = 0;
             return;
         }
@@ -58,34 +60,48 @@ public class MusicControlNotification {
         next = createAction("next", "Next", mask, PlaybackStateCompat.ACTION_SKIP_TO_NEXT, next);
         previous = createAction("previous", "Previous", mask, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS, previous);
 
-        if (options != null && options.containsKey("skipForward") && (options.get("skipForward") == 10 || options.get("skipForward") == 5 || options.get("skipForward") == 30)) {
-            skipForward = createAction("skip_forward_" + options.get("skipForward").toString(), "Skip Forward", mask, PlaybackStateCompat.ACTION_FAST_FORWARD, skipForward);
+        if (options != null && options.containsKey("skipForward") && (options.get("skipForward") == 10
+                || options.get("skipForward") == 5 || options.get("skipForward") == 30)) {
+            skipForward = createAction("skip_forward_" + options.get("skipForward").toString(), "Skip Forward", mask,
+                    PlaybackStateCompat.ACTION_FAST_FORWARD, skipForward);
         } else {
-            skipForward = createAction("skip_forward_10", "Skip Forward", mask, PlaybackStateCompat.ACTION_FAST_FORWARD, skipForward);
+            skipForward = createAction("skip_forward_10", "Skip Forward", mask, PlaybackStateCompat.ACTION_FAST_FORWARD,
+                    skipForward);
         }
 
-        if (options != null && options.containsKey("skipBackward") && (options.get("skipBackward") == 10 || options.get("skipBackward") == 5 || options.get("skipBackward") == 30)) {
-            skipBackward = createAction("skip_backward_" + options.get("skipBackward").toString(), "Skip Backward", mask, PlaybackStateCompat.ACTION_REWIND, skipBackward);
+        if (options != null && options.containsKey("skipBackward") && (options.get("skipBackward") == 10
+                || options.get("skipBackward") == 5 || options.get("skipBackward") == 30)) {
+            skipBackward = createAction("skip_backward_" + options.get("skipBackward").toString(), "Skip Backward",
+                    mask, PlaybackStateCompat.ACTION_REWIND, skipBackward);
         } else {
-            skipBackward = createAction("skip_backward_10", "Skip Backward", mask, PlaybackStateCompat.ACTION_REWIND, skipBackward);
+            skipBackward = createAction("skip_backward_10", "Skip Backward", mask, PlaybackStateCompat.ACTION_REWIND,
+                    skipBackward);
         }
     }
 
     public synchronized void show(NotificationCompat.Builder builder, boolean isPlaying) {
         // Add the buttons
         builder.mActions.clear();
-        if(previous != null) builder.addAction(previous);
-        if(skipBackward != null) builder.addAction(skipBackward);
-        if(play != null && !isPlaying) builder.addAction(play);
-        if(pause != null && isPlaying) builder.addAction(pause);
-        if(stop != null) builder.addAction(stop);
-        if(next != null) builder.addAction(next);
-        if(skipForward != null) builder.addAction(skipForward);
+        if (previous != null)
+            builder.addAction(previous);
+        if (skipBackward != null)
+            builder.addAction(skipBackward);
+        if (play != null && !isPlaying)
+            builder.addAction(play);
+        if (pause != null && isPlaying)
+            builder.addAction(pause);
+        if (stop != null)
+            builder.addAction(stop);
+        if (next != null)
+            builder.addAction(next);
+        if (skipForward != null)
+            builder.addAction(skipForward);
 
-        // Set whether notification can be closed based on closeNotification control (default PAUSED)
-        if(module.notificationClose == MusicControlModule.NotificationClose.ALWAYS) {
+        // Set whether notification can be closed based on closeNotification control
+        // (default PAUSED)
+        if (module.notificationClose == MusicControlModule.NotificationClose.ALWAYS) {
             builder.setOngoing(false);
-        } else if(module.notificationClose == MusicControlModule.NotificationClose.PAUSED) {
+        } else if (module.notificationClose == MusicControlModule.NotificationClose.PAUSED) {
             builder.setOngoing(isPlaying);
         } else { // NotificationClose.NEVER
             builder.setOngoing(true);
@@ -93,6 +109,7 @@ public class MusicControlNotification {
 
         builder.setSmallIcon(customIcon != 0 ? customIcon : smallIcon);
 
+        builder.setStyle(new MediaStyle().setShowActionsInCompactView(new int[] { 0, 1, 2 }));
         // Open the app when the notification is clicked
         String packageName = context.getPackageName();
         Intent openApp = context.getPackageManager().getLaunchIntentForPackage(packageName);
@@ -112,33 +129,37 @@ public class MusicControlNotification {
     }
 
     /**
-     * Code taken from newer version of the support library located in PlaybackStateCompat.toKeyCode
-     * Replace this to PlaybackStateCompat.toKeyCode when React Native updates the support library
+     * Code taken from newer version of the support library located in
+     * PlaybackStateCompat.toKeyCode Replace this to PlaybackStateCompat.toKeyCode
+     * when React Native updates the support library
      */
     private int toKeyCode(long action) {
-        if(action == PlaybackStateCompat.ACTION_PLAY) {
+        if (action == PlaybackStateCompat.ACTION_PLAY) {
             return KeyEvent.KEYCODE_MEDIA_PLAY;
-        } else if(action == PlaybackStateCompat.ACTION_PAUSE) {
+        } else if (action == PlaybackStateCompat.ACTION_PAUSE) {
             return KeyEvent.KEYCODE_MEDIA_PAUSE;
-        } else if(action == PlaybackStateCompat.ACTION_SKIP_TO_NEXT) {
+        } else if (action == PlaybackStateCompat.ACTION_SKIP_TO_NEXT) {
             return KeyEvent.KEYCODE_MEDIA_NEXT;
-        } else if(action == PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) {
+        } else if (action == PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) {
             return KeyEvent.KEYCODE_MEDIA_PREVIOUS;
-        } else if(action == PlaybackStateCompat.ACTION_STOP) {
+        } else if (action == PlaybackStateCompat.ACTION_STOP) {
             return KeyEvent.KEYCODE_MEDIA_STOP;
-        } else if(action == PlaybackStateCompat.ACTION_FAST_FORWARD) {
+        } else if (action == PlaybackStateCompat.ACTION_FAST_FORWARD) {
             return KeyEvent.KEYCODE_MEDIA_FAST_FORWARD;
-        } else if(action == PlaybackStateCompat.ACTION_REWIND) {
+        } else if (action == PlaybackStateCompat.ACTION_REWIND) {
             return KeyEvent.KEYCODE_MEDIA_REWIND;
-        } else if(action == PlaybackStateCompat.ACTION_PLAY_PAUSE) {
+        } else if (action == PlaybackStateCompat.ACTION_PLAY_PAUSE) {
             return KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
         }
         return KeyEvent.KEYCODE_UNKNOWN;
     }
 
-    private NotificationCompat.Action createAction(String iconName, String title, long mask, long action, NotificationCompat.Action oldAction) {
-        if((mask & action) == 0) return null; // When this action is not enabled, return null
-        if(oldAction != null) return oldAction; // If this action was already created, we won't create another instance
+    private NotificationCompat.Action createAction(String iconName, String title, long mask, long action,
+            NotificationCompat.Action oldAction) {
+        if ((mask & action) == 0)
+            return null; // When this action is not enabled, return null
+        if (oldAction != null)
+            return oldAction; // If this action was already created, we won't create another instance
 
         // Finds the icon with the given name
         Resources r = context.getResources();
@@ -168,8 +189,9 @@ public class MusicControlNotification {
 
         @Override
         public void onTaskRemoved(Intent rootIntent) {
-            // Destroy the notification and sessions when the task is removed (closed, killed, etc)
-            if(MusicControlModule.INSTANCE != null) {
+            // Destroy the notification and sessions when the task is removed (closed,
+            // killed, etc)
+            if (MusicControlModule.INSTANCE != null) {
                 MusicControlModule.INSTANCE.destroy();
             }
             stopSelf(); // Stop the service as we won't need it anymore
